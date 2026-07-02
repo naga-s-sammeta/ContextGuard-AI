@@ -4,7 +4,7 @@ This is everything already built and tested overnight. The core runs **offline a
 
 ## 0. What's already done (don't rebuild it)
 
-- Synthetic J&J warehouse, semantic map, retrieval, generator, the six governance gates, the pipeline, a Flask app, a self-contained HTML demo, automated tests (6/6 passing), architecture diagram, and the pitch deck.
+- Synthetic pharma warehouse, semantic map, retrieval, generator, the six governance gates, the pipeline, a Flask app, a self-contained HTML demo, automated tests (6/6 passing), architecture diagram, and the pitch deck.
 - The hero numbers are locked and verified against the real database.
 
 ## 1. Stand it up (5 minutes)
@@ -48,9 +48,9 @@ You do NOT need Lovable to win — `demo/index.html` is already presentable. If 
 - Redeem the free 100 credits (code `COMM-DATHON-9535`), then **set a reminder to cancel within one month** so you're never charged.
 - Point a Lovable page at the Flask `/api/ask` endpoint (host the Flask app, or run it locally and use a tunnel). Be surgical with prompts — each iteration burns credits.
 
-## 5. BigQuery framing (important for judging)
+## 5. Warehouse framing (important for judging)
 
-Statement 1 says BigQuery; we demo on DuckDB running the *identical* SQL. Handle it exactly like the Snowflake framing: name **BigQuery as the production target** on the architecture slide, and say the governance layer is warehouse-agnostic. This is honest and standard for a buildathon.
+Statement 1 mentions BigQuery; we demo on DuckDB running the *identical* SQL. Name **Snowflake as the primary production target — with BigQuery and other cloud warehouses supported** on the architecture slide, and say the governance layer is warehouse-agnostic. This is honest and standard practice.
 
 ## 6. Submission checklist
 

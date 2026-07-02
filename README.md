@@ -1,7 +1,7 @@
 # ContextGuard
 
 **Trustworthy AI answers over governed enterprise data.**
-Statement 1 · Track #10 Security & Guardrails · demoed on Johnson & Johnson / Janssen pharma data.
+Statement 1 · Track #10 Security & Guardrails · demoed on synthetic pharmaceutical data.
 
 Business users ask questions in natural language across many tables. Today's text-to-SQL works at ~80% with one or two tables but **hallucinates as more tables are added** — wrong joins, dropped filters — and the underlying data holds **PHI, PII, and confidential business information**. ContextGuard answers all three demands at once: accuracy at scale, hallucination prevention, and data privacy.
 
@@ -30,7 +30,7 @@ Open `demo/index.html` directly in a browser for the **self-contained visual dem
 The system runs fully offline at **$0** using a deterministic SQL engine. To use a live model:
 
 ```bash
-export FEATHERLESS_API_KEY=your-key      # from the buildathon promo
+export FEATHERLESS_API_KEY=your-key      # from your Featherless promo
 python src/app.py                        # the app auto-detects the key
 ```
 
@@ -50,7 +50,7 @@ Question: *"Total settled safety cost for serious adverse events on immunology p
 
 ```
 contextguard/
-  data/generate_data.py        synthetic J&J warehouse (real brand names + openFDA terms)
+  data/generate_data.py        synthetic pharma warehouse (real brand names + openFDA terms)
   registry/semantic_map.yaml   THE single source of truth (tables, joins, PHI/PII, metrics, roles)
   registry/golden_questions.yaml  known-good answers for validation
   src/retrieval.py             schema-aware narrowing (the accuracy lever)
@@ -66,5 +66,5 @@ contextguard/
 ## Attribution
 
 - LLM: Featherless-hosted open instruct model (pluggable; deterministic engine offline).
-- Data grounding: real Janssen/J&J brand names and adverse-event terms from the **openFDA FAERS API** (api.fda.gov, public; data updated 2026-04-28). All patient and financial facts are **synthetic**.
-- Warehouse: DuckDB (production target: Google BigQuery). Built with Flask, PyYAML.
+- Data grounding: real marketed drug brand names and adverse-event terms from the **openFDA FAERS API** (api.fda.gov, public; data updated 2026-04-28). All patient and financial facts are **synthetic**.
+- Warehouse: DuckDB (production targets: Snowflake, BigQuery, and other cloud warehouses). Built with Flask, PyYAML.

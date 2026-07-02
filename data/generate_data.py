@@ -1,5 +1,5 @@
 """
-Generate a synthetic PHARMA (Johnson & Johnson / Janssen) warehouse in DuckDB
+Generate a synthetic PHARMA warehouse in DuckDB
 for the ContextGuard demo.
 
 Statement 1 says the data "may contain PHI, PII, or confidential business
@@ -8,7 +8,7 @@ information." A drug-safety + commercial pharma warehouse hits all three:
   - PII  : prescriber name + NPI
   - CONF : product sales revenue and legal safety-cost / settlement amounts
 
-Brand names are REAL Janssen products and reactions are REAL terms from the
+Brand names are REAL marketed drugs and reactions are REAL terms from the
 openFDA FAERS API (api.fda.gov, free/public). All facts (patients, amounts,
 dates) are SYNTHETIC and deterministic (fixed seed). No real patient/financial
 data is used.
@@ -26,7 +26,7 @@ random.seed(42)
 
 REGIONS = ["North", "South", "East", "West"]
 
-# Real Janssen/J&J brands (from openFDA) mapped to therapeutic areas.
+# Real marketed drug brand names (from openFDA) mapped to therapeutic areas.
 PRODUCTS = [
     ("REMICADE",  "infliximab",   "Immunology"),
     ("STELARA",   "ustekinumab",  "Immunology"),
@@ -60,7 +60,7 @@ def build():
     con = duckdb.connect(DB_PATH)
 
     # ---- gold_products (dimension) ----
-    products = [(i + 1, b, g, ta, "Janssen (J&J)") for i, (b, g, ta) in enumerate(PRODUCTS)]
+    products = [(i + 1, b, g, ta, "Synthetic Pharma Co") for i, (b, g, ta) in enumerate(PRODUCTS)]
     con.execute("""CREATE OR REPLACE TABLE gold_products(
         product_id INT, brand_name VARCHAR, generic_name VARCHAR,
         therapeutic_area VARCHAR, manufacturer VARCHAR)""")

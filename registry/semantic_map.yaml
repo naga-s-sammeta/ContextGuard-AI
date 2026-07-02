@@ -1,6 +1,6 @@
 # =============================================================================
 # ContextGuard Semantic Map  --  THE SINGLE SOURCE OF TRUTH
-# Domain: Johnson & Johnson / Janssen pharma (drug-safety + commercial).
+# Domain: pharmaceutical drug-safety + commercial (synthetic).
 # -----------------------------------------------------------------------------
 # This ONE file does TWO jobs (the core pitch):
 #   1. GENERATION (accuracy): the retrieval layer reads `description`,
@@ -17,7 +17,7 @@ tables:
     layer: gold
     certified: true
     grain: one row per marketed product
-    description: Product master. Brand, generic name and therapeutic area (Immunology, Oncology, Neuroscience, Cardiovascular). Janssen / J&J.
+    description: Product master. Brand, generic name and therapeutic area (Immunology, Oncology, Neuroscience, Cardiovascular).
     synonyms: [product, products, drug, drugs, brand, medicine, therapy, therapeutic, immunology, oncology, neuroscience, cardiovascular, stelara, remicade, xarelto, darzalex]
     join_keys: [product_id]
     columns:

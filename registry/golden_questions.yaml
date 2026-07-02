@@ -1,7 +1,7 @@
 # =============================================================================
 # Golden questions = known-good answers ContextGuard validates against
 # (the "result consistency" gate). Values are computed from the real DuckDB.
-# Domain: J&J / Janssen pharma.
+# Domain: pharmaceutical (synthetic).
 # =============================================================================
 
 - id: q1_immunology_settled_safety_cost
