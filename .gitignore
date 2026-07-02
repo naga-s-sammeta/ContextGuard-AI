@@ -1,31 +1,39 @@
-# ---- Secrets / keys (NEVER commit) ----
-.env
-.env.*
-*.key
-**/secrets*
-**/accounts_and_keys*
-**/credits_and_keys*
+# dependencies
+node_modules/
+.pnpm-store/
 
-# ---- Python ----
+# Next.js
+.next/
+out/
+
+# Python
 __pycache__/
 *.py[cod]
-*.egg-info/
+.pytest_cache/
 .venv/
 venv/
-env/
-.pytest_cache/
-.ipynb_checkpoints/
 
-# ---- Generated data / DB (rebuilt via data/generate_data.py) ----
-*.duckdb
-*.duckdb.wal
-data/*.duckdb
-data/*.duckdb.wal
+# environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
-# ---- Build / editor / OS noise ----
-qa/
-*.tmp
-~$*
+# local output
+coverage/
+dist/
+build/
+tmp/
+temp/
+
+# OS/editor
 .DS_Store
-.idea/
+Thumbs.db
 .vscode/
+.idea/
+
+# generated data that may become large
+data/generated/
+data/raw_exports/
+

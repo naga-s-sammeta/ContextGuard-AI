@@ -1,70 +1,47 @@
-# ContextGuard
+# ContextGuard AI
 
-**Trustworthy AI answers over governed enterprise data.**
-Statement 1 · Track #10 Security & Guardrails · demoed on synthetic pharmaceutical data.
+ContextGuard AI is a governed enterprise intelligence hub for natural-language analytics over structured warehouse data and enterprise documents.
 
-Business users ask questions in natural language across many tables. Today's text-to-SQL works at ~80% with one or two tables but **hallucinates as more tables are added** — wrong joins, dropped filters — and the underlying data holds **PHI, PII, and confidential business information**. ContextGuard answers all three demands at once: accuracy at scale, hallucination prevention, and data privacy.
+The first implementation path is Snowflake-first. The POC will use Snowflake Cortex, semantic modeling, role-based access control, masking policies, document intelligence, automatic charting, and evaluation workflows to help business users get trusted answers without writing SQL.
 
-## One semantic map, two jobs
+## Current Status
 
-A single governance artifact — the **semantic map** — does both jobs:
+This repository has been reset for the new Snowflake-first POC. The previous repository contents are preserved on the `archive/old-version` branch.
 
-1. **Accuracy (anti-hallucination).** A schema-aware retrieval step narrows the tables, columns, and join keys shown to the model *for each question*, so it cannot invent a wrong join across a wide schema.
-2. **Governance (ContextGuard).** Before any answer reaches a human, six gates validate it against the same map: certified source, data freshness, PHI/PII access by role, SQL safety, approved metric definition, and row-level security.
+## Project Areas
 
-See `docs/architecture.svg` for the diagram.
+- `docs/` - project blueprint, Jira plan, architecture notes, and demo documentation.
+- `snowflake/` - Snowflake setup, raw tables, curated views, semantic model, security, document, and evaluation SQL.
+- `app/` - application code. The Next.js frontend will be scaffolded here.
+- `data/` - synthetic data and sample documents for the POC.
+- `scripts/` - data generation and evaluation utilities.
 
-## Quick start
+## First POC Goal
 
-```bash
-pip install -r requirements.txt
-python data/generate_data.py        # builds the synthetic warehouse (DuckDB)
-python run_demo.py                   # CLI walkthrough of all 6 scenarios
-python src/app.py                    # live app at http://localhost:7860
-```
+Build a Snowflake-first governed intelligence platform with:
 
-Open `demo/index.html` directly in a browser for the **self-contained visual demo** (no server, no install — precomputed from the real warehouse).
+- Natural-language questions over Snowflake data.
+- Semantic model based SQL generation using Cortex Analyst.
+- Automatic chart rendering.
+- Persona-based business dashboards.
+- Admin governance studio.
+- PHI/PII-style masking and row-level access examples.
+- PDF/document upload and semantic Q&A.
+- Evaluation dataset for hallucination and accuracy testing.
 
-## Live LLM mode (optional, morning-of)
+## Team Model
 
-The system runs fully offline at **$0** using a deterministic SQL engine. To use a live model:
+The project is organized as a two-resource delivery model:
 
-```bash
-export FEATHERLESS_API_KEY=your-key      # from your Featherless promo
-python src/app.py                        # the app auto-detects the key
-```
+- Data/AI Engineer: Snowflake, synthetic data, semantic layer, Cortex, security, evaluation.
+- Product/Frontend Engineer: Next.js app, dashboards, admin studio, charts, document UI, demo polish.
 
-The same six gates run on the model's SQL, so the guard protects you even when a real model writes the query.
+## Key Documents
 
-## The hero result
+- [Project Blueprint](docs/ContextGuard_AI_Project_Blueprint.md)
+- [Day-Wise Jira Plan](docs/Jira_Day_Wise_Two_Resource_Plan.md)
 
-Question: *"Total settled safety cost for serious adverse events on immunology products"* (a 3-table join: products → adverse_events → safety_costs).
+## Security Notes
 
-| | Answer |
-|---|---|
-| Ungoverned (invents a cross-join, drops filters) | **₹240,806,409** — a ~15x hallucination |
-| Governed (certified Gold tables) | **₹16,165,949** |
-| Misstatement avoided | **₹224,640,459** |
+Do not commit real secrets, Snowflake passwords, API keys, private keys, or customer data. Use `.env.local` for local secrets and keep `.env.example` as the documented template.
 
-## Layout
-
-```
-contextguard/
-  data/generate_data.py        synthetic pharma warehouse (real brand names + openFDA terms)
-  registry/semantic_map.yaml   THE single source of truth (tables, joins, PHI/PII, metrics, roles)
-  registry/golden_questions.yaml  known-good answers for validation
-  src/retrieval.py             schema-aware narrowing (the accuracy lever)
-  src/generator.py             governed / naive / Featherless engines + self-verify
-  src/contextguard.py          the 6 governance gates + verdicts
-  src/pipeline.py              retrieve -> generate -> guard
-  src/app.py                   live Flask app + audit dashboard
-  demo/index.html              self-contained visual demo
-  tests/test_scenarios.py      automated checks (6/6 passing)
-  docs/                        architecture diagram, build guide, demo script
-```
-
-## Attribution
-
-- LLM: Featherless-hosted open instruct model (pluggable; deterministic engine offline).
-- Data grounding: real marketed drug brand names and adverse-event terms from the **openFDA FAERS API** (api.fda.gov, public; data updated 2026-04-28). All patient and financial facts are **synthetic**.
-- Warehouse: DuckDB (production targets: Snowflake, BigQuery, and other cloud warehouses). Built with Flask, PyYAML.
