@@ -1,0 +1,176 @@
+# =============================================================================
+# ContextGuard Semantic Map  --  THE SINGLE SOURCE OF TRUTH
+# Domain: Johnson & Johnson / Janssen pharma (drug-safety + commercial).
+# -----------------------------------------------------------------------------
+# This ONE file does TWO jobs (the core pitch):
+#   1. GENERATION (accuracy): the retrieval layer reads `description`,
+#      `synonyms`, columns and `joins` to narrow the schema shown to the model
+#      per question -> kills multi-table join hallucination.
+#   2. GOVERNANCE (ContextGuard): the validators read `certified`, `layer`,
+#      `pii`, `phi`, `conf` and the metric definitions to decide whether an
+#      answer is trustworthy -> blocks/flags uncertified, stale, PHI/PII-leaking
+#      answers.
+# =============================================================================
+
+tables:
+  gold_products:
+    layer: gold
+    certified: true
+    grain: one row per marketed product
+    description: Product master. Brand, generic name and therapeutic area (Immunology, Oncology, Neuroscience, Cardiovascular). Janssen / J&J.
+    synonyms: [product, products, drug, drugs, brand, medicine, therapy, therapeutic, immunology, oncology, neuroscience, cardiovascular, stelara, remicade, xarelto, darzalex]
+    join_keys: [product_id]
+    columns:
+      product_id:       {type: int,     pii: false, phi: false, conf: false, role: key}
+      brand_name:       {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      generic_name:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      therapeutic_area: {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      manufacturer:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+
+  gold_prescribers:
+    layer: gold
+    certified: true
+    grain: one row per prescribing physician
+    description: Prescriber master (HCP). Name, NPI, specialty, region.
+    synonyms: [prescriber, prescribers, physician, doctor, hcp, npi, specialty]
+    join_keys: [prescriber_id, region]
+    columns:
+      prescriber_id:   {type: int,     pii: false, phi: false, conf: false, role: key}
+      prescriber_name: {type: varchar, pii: true,  phi: false, conf: false, role: attribute}
+      npi:             {type: varchar, pii: true,  phi: false, conf: false, role: attribute}
+      specialty:       {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      region:          {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+
+  gold_adverse_events:
+    layer: gold
+    certified: true
+    grain: one row per adverse-event report (FAERS-style)
+    description: Adverse event reports. Patient demographics, reaction, seriousness outcome, reporting prescriber and product.
+    synonyms: [adverse, event, events, reaction, reactions, side effect, safety, serious, faers, report, pharmacovigilance, patient]
+    join_keys: [event_id, product_id, prescriber_id, region]
+    columns:
+      event_id:     {type: int,     pii: false, phi: false, conf: false, role: key}
+      product_id:   {type: int,     pii: false, phi: false, conf: false, role: key}
+      prescriber_id:    {type: int,     pii: false, phi: false, conf: false, role: key}
+      region:       {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      patient_age:  {type: int,     pii: false, phi: true,  conf: false, role: attribute}
+      patient_sex:  {type: varchar, pii: false, phi: true,  conf: false, role: attribute}
+      reaction:     {type: varchar, pii: false, phi: true,  conf: false, role: attribute}
+      outcome:      {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      report_date:  {type: date,    pii: false, phi: false, conf: false, role: dimension}
+
+  gold_safety_costs:
+    layer: gold
+    certified: true
+    grain: one row per legal/remediation cost tied to a serious event
+    description: Confidential safety / litigation cost per adverse event. Amount and settlement status. CERTIFIED source for safety-cost reporting.
+    synonyms: [cost, costs, safety cost, liability, settlement, settled, remediation, legal, amount, payout]
+    join_keys: [cost_id, event_id, region]
+    columns:
+      cost_id:  {type: int,     pii: false, phi: false, conf: false, role: key}
+      event_id: {type: int,     pii: false, phi: false, conf: false, role: key}
+      region:   {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      amount:   {type: double,  pii: false, phi: false, conf: true,  role: measure}
+      status:   {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+
+  gold_sales:
+    layer: gold
+    certified: true
+    grain: one row per product / region / quarter
+    description: Confidential commercial sales. Units and net revenue by product, region, quarter. CERTIFIED source for revenue.
+    synonyms: [sales, revenue, units, commercial, sold, quarter, period, money]
+    join_keys: [sale_id, product_id, region]
+    columns:
+      sale_id:    {type: int,     pii: false, phi: false, conf: false, role: key}
+      product_id: {type: int,     pii: false, phi: false, conf: false, role: key}
+      region:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      period:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      units:      {type: int,     pii: false, phi: false, conf: false, role: measure}
+      revenue:    {type: double,  pii: false, phi: false, conf: true,  role: measure}
+
+  silver_safety_costs:
+    layer: silver
+    certified: false      # NOT certified -> ContextGuard must reject answers built on this
+    grain: partial staging copy of safety costs
+    description: Uncertified, stale staging copy of safety costs. Do NOT use for reporting.
+    synonyms: [cost, costs, safety cost, settlement, staging]
+    join_keys: [cost_id, event_id, region]
+    columns:
+      cost_id:  {type: int,     pii: false, phi: false, conf: false, role: key}
+      event_id: {type: int,     pii: false, phi: false, conf: false, role: key}
+      region:   {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      amount:   {type: double,  pii: false, phi: false, conf: true,  role: measure}
+      status:   {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+
+  silver_sales:
+    layer: silver
+    certified: false
+    grain: partial/older staging copy of sales
+    description: Uncertified, stale staging copy of sales (older ETL run, understated). Do NOT use for reporting.
+    synonyms: [sales, revenue, staging]
+    join_keys: [sale_id, product_id, region]
+    columns:
+      sale_id:    {type: int,     pii: false, phi: false, conf: false, role: key}
+      product_id: {type: int,     pii: false, phi: false, conf: false, role: key}
+      region:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      period:     {type: varchar, pii: false, phi: false, conf: false, role: dimension}
+      units:      {type: int,     pii: false, phi: false, conf: false, role: measure}
+      revenue:    {type: double,  pii: false, phi: false, conf: true,  role: measure}
+
+# -----------------------------------------------------------------------------
+# Canonical join paths. Retrieval hands ONLY the needed edges to the generator,
+# so it cannot invent a wrong join (e.g. products x safety_costs with no key).
+# -----------------------------------------------------------------------------
+joins:
+  - {left: gold_safety_costs,   left_key: event_id,      right: gold_adverse_events, right_key: event_id}
+  - {left: gold_adverse_events, left_key: product_id,    right: gold_products,       right_key: product_id}
+  - {left: gold_adverse_events, left_key: prescriber_id, right: gold_prescribers,    right_key: prescriber_id}
+  - {left: gold_sales,          left_key: product_id,    right: gold_products,       right_key: product_id}
+
+# -----------------------------------------------------------------------------
+# Approved metric definitions. Governance checks the answer used EXACTLY this
+# logic (right certified table, right filter).
+# -----------------------------------------------------------------------------
+metrics:
+  settled_safety_cost:
+    description: Sum of safety-cost amount for SETTLED costs only.
+    expression: "SUM(amount) WHERE status = 'settled'"
+    certified_table: gold_safety_costs
+    required_filters: ["status = 'settled'"]
+    synonyms: [settled safety cost, settled cost, settled liability, safety cost]
+
+  total_safety_cost:
+    description: Sum of safety-cost amount across all statuses.
+    expression: "SUM(amount)"
+    certified_table: gold_safety_costs
+    required_filters: []
+    synonyms: [total safety cost, total liability]
+
+  net_sales_revenue:
+    description: Sum of net sales revenue.
+    expression: "SUM(revenue)"
+    certified_table: gold_sales
+    required_filters: []
+    synonyms: [revenue, net sales, sales revenue]
+
+# -----------------------------------------------------------------------------
+# Role-based access policy (column- and row-level security).
+# -----------------------------------------------------------------------------
+roles:
+  analyst:
+    description: Commercial/safety analyst. May see aggregate revenue & cost. NO PHI, NO raw PII.
+    deny_phi: true
+    deny_pii: true
+    row_filter: null
+
+  safety_officer:
+    description: Pharmacovigilance officer. May view PHI for case review. Sees all regions.
+    deny_phi: false
+    deny_pii: false
+    row_filter: null
+
+  regional_manager_north:
+    description: Manager for the North region only (row-level security).
+    deny_phi: true
+    deny_pii: true
+    row_filter: "region = 'North'"

@@ -1,0 +1,58 @@
+# =============================================================================
+# Golden questions = known-good answers ContextGuard validates against
+# (the "result consistency" gate). Values are computed from the real DuckDB.
+# Domain: J&J / Janssen pharma.
+# =============================================================================
+
+- id: q1_immunology_settled_safety_cost
+  hero: true
+  question: "What is the total settled safety cost for serious adverse events on immunology products?"
+  # Correct path: products(Immunology) -> adverse_events(serious) -> safety_costs(settled)
+  expected_value: 16165949.87
+  tolerance: 1.0
+  metric: settled_safety_cost
+  required_tables: [gold_products, gold_adverse_events, gold_safety_costs]
+  required_filters: ["therapeutic_area = 'Immunology'", "outcome = 'serious'", "status = 'settled'"]
+  naive_value: 240806409.40       # cross/!wrong join + dropped filters  (~15x overcount)
+  stale_value: 12321020.71        # built on uncertified silver_safety_costs (undercount)
+  notes: >
+    HERO QUESTION. Needs a 3-table join. The naive engine joins products to
+    safety_costs with no valid key and drops the serious/settled filters,
+    producing 240,806,409 -- a ~15x hallucinated overcount. A second failure
+    uses the uncertified, stale silver_safety_costs table. The governed
+    pipeline returns 16,165,949.87 from certified Gold tables.
+
+- id: q2_stelara_q1_revenue
+  hero: false
+  question: "What was STELARA sales revenue in 2026 Q1?"
+  expected_value: 10363303.73
+  tolerance: 1.0
+  metric: net_sales_revenue
+  required_tables: [gold_sales, gold_products]
+  required_filters: ["brand_name = 'STELARA'", "period = '2026Q1'"]
+  stale_value: 6217982.24         # silver_sales is an older, understated snapshot (~40% low)
+  notes: >
+    Stale-source block (mirrors the rehearsed hook). Naive reads the uncertified
+    silver_sales staging table and reports 6,217,982 -- understated ~40%.
+    ContextGuard blocks it and returns the certified 10,363,303.73.
+
+- id: q3_xarelto_phi
+  hero: false
+  question: "Show patient age, sex and reaction for Xarelto adverse events."
+  expected_value: null            # the answer is not the point; PHI exposure is
+  metric: null
+  required_tables: [gold_adverse_events, gold_products]
+  touches_phi: true
+  notes: >
+    Touches PHI columns (patient_age, patient_sex, reaction). For an `analyst`
+    role this must be BLOCKED. For a `safety_officer` it is allowed (audited).
+
+- id: q4_revenue_by_region_rls
+  hero: false
+  question: "What is the total sales revenue by region?"
+  expected_value: {East: 39548236.30, North: 63293308.79, South: 51362983.17, West: 63306790.55}
+  metric: net_sales_revenue
+  required_tables: [gold_sales]
+  notes: >
+    Row-level security demo. A `regional_manager_north` user must only see
+    North = 63,293,308.79; other regions are filtered out by the row policy.

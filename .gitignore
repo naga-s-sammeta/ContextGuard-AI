@@ -1,0 +1,31 @@
+# ---- Secrets / keys (NEVER commit) ----
+.env
+.env.*
+*.key
+**/secrets*
+**/accounts_and_keys*
+**/credits_and_keys*
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ---- Generated data / DB (rebuilt via data/generate_data.py) ----
+*.duckdb
+*.duckdb.wal
+data/*.duckdb
+data/*.duckdb.wal
+
+# ---- Build / editor / OS noise ----
+qa/
+*.tmp
+~$*
+.DS_Store
+.idea/
+.vscode/
